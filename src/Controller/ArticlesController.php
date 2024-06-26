@@ -41,6 +41,28 @@ class ArticlesController extends AppController
     }
     $this->set('article', $article);
   }
+
+  public function edit($slug) 
+  {
+    // 該当記事の取得
+    $article = $this->Articles->findBySlug($slug)->firstOrFail();
+
+    // リクエストがputかpostであるかの判定
+    if ($this->request->is(['put', 'post'])) {
+      // putかpostである場合には記事の更新を行う。
+      $article = $this->Articles->patchEntity($article, $this->request->getData());
+      if ($this->Articles->save($article)) {
+        // 更新が成功したら成功のメッセージを表示し、indexにリダイレクトする。
+        $this->Flash->success(__('Your article has been updated.'));
+        return $this->redirect(['action' => 'index']);
+      }
+      // 更新が失敗したらエラーメッセージを表示する。
+      $this->Flash->error(__('Unable to update your article.'));
+    }
+
+    // articleをビューにセットする。
+    $this->set('article', $article);
+  }
 }
 
 ?>
