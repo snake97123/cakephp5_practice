@@ -53,7 +53,9 @@ class ArticlesController extends AppController
     // リクエストがputかpostであるかの判定
     if ($this->request->is(['put', 'post'])) {
       // putかpostである場合には記事の更新を行う。
-      $article = $this->Articles->patchEntity($article, $this->request->getData());
+      $article = $this->Articles->patchEntity($article, $this->request->getData(), [
+        'associated' => ['Tags']
+      ]);
       if ($this->Articles->save($article)) {
         // 更新が成功したら成功のメッセージを表示し、indexにリダイレクトする。
         $this->Flash->success(__('Your article has been updated.'));
@@ -85,6 +87,21 @@ class ArticlesController extends AppController
       return $this->redirect(['action' => 'index']);
     }
   }
+
+   public function tags()
+   {
+      $tags = $this->request->getParam('pass');
+
+      $articles = $this->Articles->find('tagged', [
+        'tags' => $tags
+      ])
+      ->all();
+     debug($articles);
+      $this->set([
+        'articles' => $articles,
+        'tags' => $tags
+      ]);
+   }
 }
 
 ?>

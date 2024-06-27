@@ -41,6 +41,8 @@ class TagsTable extends Table
     {
         parent::initialize($config);
 
+        $this->belongsToMany('Articles');
+
         $this->setTable('tags');
         $this->setDisplayField('title');
         $this->setPrimaryKey('id');
