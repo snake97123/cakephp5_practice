@@ -39,13 +39,16 @@ class ArticlesController extends AppController
       }
       $this->Flash->error(__('Unable to add your article'));
     }
+    $tags = $this->Articles->Tags->find('list')->all();
+    $this->set('tags', $tags);
+
     $this->set('article', $article);
   }
 
   public function edit($slug) 
   {
     // 該当記事の取得
-    $article = $this->Articles->findBySlug($slug)->firstOrFail();
+    $article = $this->Articles->findBySlug($slug)->contain('Tags')->firstOrFail();
 
     // リクエストがputかpostであるかの判定
     if ($this->request->is(['put', 'post'])) {
@@ -59,6 +62,10 @@ class ArticlesController extends AppController
       // 更新が失敗したらエラーメッセージを表示する。
       $this->Flash->error(__('Unable to update your article.'));
     }
+
+    $tags = $this->Articles->Tags->find('list')->all();
+
+    $this->set('tags', $tags);
 
     // articleをビューにセットする。
     $this->set('article', $article);
