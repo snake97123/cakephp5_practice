@@ -9,6 +9,7 @@ use Cake\ORM\Query\SelectQuery;
 use Cake\Utility\Text;
 use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
+use Cake\Collection\Collection;
 
 class ArticlesTable extends Table 
 {
@@ -17,8 +18,7 @@ class ArticlesTable extends Table
         parent::initialize($config);
         $this->addBehavior('Timestamp');
         $this->belongsToMany('Tags', [
-            'foreignKey' => 'article_id',
-            'targetForeignKey' => 'tag_id',
+            'dependent' => true,
             'joinTable' => 'articles_tags',
         ]);
     }
@@ -39,10 +39,44 @@ class ArticlesTable extends Table
 
     public function beforeSave(EventInterface $event, $entity, $options) 
     {
+        if ($entity->tag_string) {
+            $entity->tags = $this->_buildTags($entity->tag_string);
+        }
+
         if ($entity->isNew() && !$entity->slug) {
             $sluggedTitle = Text::slug($entity->title);
             $entity->slug = substr($sluggedTitle, 0, 191);
         }
+    }
+
+    protected function _buildTags($tagString) 
+    {
+        $newTags = array_map('trim', explode(',', $tagString));
+        $newTags = array_filter($newTags);
+        $newTags = array_unique($newTags);
+
+        $out = [];
+        $query = $this->Tags->find()
+             ->where(['Tags.title IN' => $newTags]);
+
+             $existingTags = (new Collection($query->all()))->extract('title')->toList();
+
+        foreach($existingTags as $existing) {
+            $index = array_search($existing, $newTags);
+            if ($index !== false) {
+                unset($newTags[$index]);
+            }
+        }
+
+        foreach($query as $tag) {
+            $out[] = $tag;
+        }
+
+        foreach($newTags as $tag) {
+            $out[] = $this->Tags->newEntity(['title' => $tag]);
+        }
+
+        return $out;
     }
 
   
