@@ -63,6 +63,21 @@ class ArticlesController extends AppController
     // articleをビューにセットする。
     $this->set('article', $article);
   }
+
+  public function delete($slug) 
+  {
+    // リクエストがdeleteかpostだけを許可する。
+    $this->request->allowMethod(['post', 'delete']);
+
+    // 該当記事の取得
+    $article = $this->Articles->findBySlug($slug)->firstOrFail();
+
+    // 記事の削除を行い、状況によってメッセージを表示する
+    if($this->Articles->delete($article)) {
+      $this->Flash->success(__('The {0} article has been deleted.', $article->title));
+      return $this->redirect(['action' => 'index']);
+    }
+  }
 }
 
 ?>
