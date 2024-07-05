@@ -66,6 +66,8 @@ return function (RouteBuilder $routes): void {
                 $builder->connect('/tagged/*', ['controller' => 'Articles', 'action' => 'tags']);
         });
 
+        $builder->connect('/count', ['controller' => 'Count', 'action' => 'index']);
+
         /*
          * Connect catchall routes for all controllers.
          *
