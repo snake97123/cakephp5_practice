@@ -13,12 +13,14 @@ class ArticlesController extends AppController
 
   public function index()
   {
+    $this->Authorization->skipAuthorization();
     $articles = $this->paginate($this->Articles);
     $this->set(compact('articles'));
   }
 
   public function view($slug = null)
   {
+    $this->Authorization->skipAuthorization();
     $article = $this->Articles->findBySlug($slug)->contain('Tags')->firstOrFail();
     $this->set(compact('article'));
   }
@@ -26,11 +28,12 @@ class ArticlesController extends AppController
   public function add()
   {
     $article = $this->Articles->newEmptyEntity();
+    $this->Authorization->authorize($article);
 
     if($this->request->is('post')) {
       $article = $this->Articles->patchEntity($article, $this->request->getData());
 
-      $article->user_id = 1;
+      $article->user_id = $this->request->getAttribute('identity')->getIdentifier();
 
       if($this->Articles->save($article)) {
         $this->Flash->success(__('Your article has been saved.'));
@@ -40,21 +43,20 @@ class ArticlesController extends AppController
       $this->Flash->error(__('Unable to add your article'));
     }
     $tags = $this->Articles->Tags->find('list')->all();
-    $this->set('tags', $tags);
-
-    $this->set('article', $article);
+    $this->set(compact('article', 'tags'));
   }
 
   public function edit($slug) 
   {
     // 該当記事の取得
     $article = $this->Articles->findBySlug($slug)->contain('Tags')->firstOrFail();
+    $this->Authorization->authorize($article);
 
     // リクエストがputかpostであるかの判定
     if ($this->request->is(['put', 'post'])) {
       // putかpostである場合には記事の更新を行う。
       $article = $this->Articles->patchEntity($article, $this->request->getData(), [
-        'associated' => ['Tags']
+        'accessibleFields' => ['user_id' => false]
       ]);
       if ($this->Articles->save($article)) {
         // 更新が成功したら成功のメッセージを表示し、indexにリダイレクトする。
@@ -67,10 +69,7 @@ class ArticlesController extends AppController
 
     $tags = $this->Articles->Tags->find('list')->all();
 
-    $this->set('tags', $tags);
-
-    // articleをビューにセットする。
-    $this->set('article', $article);
+    $this->set(compact('article', 'tags'));
   }
 
   public function delete($slug) 
@@ -80,6 +79,7 @@ class ArticlesController extends AppController
 
     // 該当記事の取得
     $article = $this->Articles->findBySlug($slug)->firstOrFail();
+    $this->Authorization->authorize($article);
 
     // 記事の削除を行い、状況によってメッセージを表示する
     if($this->Articles->delete($article)) {
@@ -90,6 +90,7 @@ class ArticlesController extends AppController
 
    public function tags()
    {
+      $this->Authorization->skipAuthorization();
       $tags = $this->request->getParam('pass');
 
       $articles = $this->Articles->find('tagged', [

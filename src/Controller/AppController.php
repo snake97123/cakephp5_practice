@@ -46,6 +46,7 @@ class AppController extends Controller
         // $this->loadComponent('RequestHandler');
 
         $this->loadComponent('Authentication.Authentication');
+        $this->loadComponent('Authorization.Authorization');
 
         /*
          * Enable the following component for recommended CakePHP form protection settings.
@@ -54,9 +55,9 @@ class AppController extends Controller
         //$this->loadComponent('FormProtection');
     }
 
-    // public function beforeFilter(EventInterface $event)
-    // {
-    //     parent::beforeFilter($event);
-    //     $this->Authentication->addUnauthenticatedActions(['index', 'view']);
-    // }
+    public function beforeFilter(EventInterface $event)
+    {
+        parent::beforeFilter($event);
+        $this->Authentication->addUnauthenticatedActions(['login', 'index', 'view']);
+    }
 }
